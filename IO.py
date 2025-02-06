@@ -1,12 +1,12 @@
 import numpy as np
-import pcl
+from pclpy import pcl
 
 class IO:
     def get_pcl_from(input):
         if type(input) == str:
             if input[-4:] == ".npy":
                 arr = np.load(input)
-                cloud = pcl.PointCloud()
+                cloud = pcl.PointCloud.PointXYZ()
                 cloud.from_array(arr.astype(np.float32))
             elif input[-4:] in [".pcd", ".ply"]:
                 cloud = pcl.load(input)
@@ -14,7 +14,7 @@ class IO:
                 raise NotImplementedError(input)
             return cloud
         elif type(input) == np.ndarray:
-            cloud = pcl.PointCloud()
+            cloud = pcl.PointCloud.PointXYZ()
             cloud.from_array(input.astype(np.float32))
             return cloud
         else:
