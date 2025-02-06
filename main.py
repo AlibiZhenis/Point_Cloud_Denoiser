@@ -1,9 +1,9 @@
 import os
-from pclpy import pcl
+# import pcl
 import numpy as np
 import torch
 
-from IO import IO
+# from IO import IO
 from PointFilter.Pointfilter_Network_Architecture import pointfilternet
 from PointFilter.Pointfilter_DataLoader import PointcloudPatchDataset
 
@@ -28,25 +28,25 @@ class PC_denoiser:
         
     #     return filtered_cloud
     
-    @staticmethod
-    def denoise_voxel_grid_filter(input_object, leaf_size=0.1, output_file = None):
-        cloud = IO.get_pcl_from(input=input_object)
-        filter = cloud.make_voxel_grid_filter()
+    # @staticmethod
+    # def denoise_voxel_grid_filter(input_object, leaf_size=0.1, output_file = None):
+    #     cloud = IO.get_pcl_from(input=input_object)
+    #     filter = cloud.make_voxel_grid_filter()
 
-        # Set the parameters for the filter
-        filter.set_leaf_size(leaf_size, leaf_size, leaf_size)
+    #     # Set the parameters for the filter
+    #     filter.set_leaf_size(leaf_size, leaf_size, leaf_size)
 
-        # Apply the filter
-        filtered_cloud = filter.filter()
+    #     # Apply the filter
+    #     filtered_cloud = filter.filter()
 
-        if output_file:
-            pcl.save(filtered_cloud, output_file)
+    #     if output_file:
+    #         pcl.save(filtered_cloud, output_file)
         
-        return filtered_cloud
+    #     return filtered_cloud
     
     @staticmethod
-    def denoise_pointfilter(input_object, patch_radius = 0.05, num_workers = 8, model_path = None, output_file = None):
-        cloud = IO.get_pcl_from(input=input_object)
+    def denoise_pointfilter(cloud, patch_radius = 0.05, num_workers = 8, model_path = None, output_file = None):
+        # cloud = IO.get_pcl_from(input=input_object)
 
         test_dataset = PointcloudPatchDataset(
             cloud=cloud,
@@ -82,7 +82,8 @@ class PC_denoiser:
 
 
         if output_file:
-            pcl.save(pred_pts, output_file.astype('float32'))
+            # pcl.save(pred_pts.astype('float32'), output_file)
+            np.save(output_file, pred_pts.astype('float32'))
         
         return pred_pts
         
@@ -94,7 +95,7 @@ output_file = 'denoised_point_cloud.pcd'
 arr = np.load(input_file)
 # print(type(arr))
 arr = PC_denoiser.denoise_pointfilter(arr, output_file=output_file)
-arr = IO.pcl_to_numpy(cloud=arr)
+# arr = IO.pcl_to_numpy(cloud=arr)
 
 import matplotlib.pyplot as plt
 fig = plt.figure()
