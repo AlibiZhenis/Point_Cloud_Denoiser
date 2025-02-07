@@ -45,16 +45,21 @@ class PC_denoiser:
     #     return filtered_cloud
     
     @staticmethod
-    def denoise_pointfilter(cloud, patch_radius = 0.05, num_workers = 8, model_path = None, output_file = None):
+    def denoise_pointfilter(cloud, patch_radius = 0.05, num_workers = 0, model_path = None, output_file = None):
         # cloud = IO.get_pcl_from(input=input_object)
 
         test_dataset = PointcloudPatchDataset(
             cloud=cloud,
             patch_radius=patch_radius,
-            train_state='evaluation')
+            train_state='evaluation',
+            shape_name="dummy")
+        # print(len(test_dataset))
         test_dataloader = torch.utils.data.DataLoader(
             test_dataset,
-            num_workers=int(num_workers))
+            num_workers=int(num_workers),
+            batch_size = 64,
+            )
+        # print(len(test_dataloader))
         
         pointfilter_eval = pointfilternet().cuda()
         if model_path is None:
@@ -68,9 +73,11 @@ class PC_denoiser:
         pred_pts = np.empty((0, 3), dtype='float32')
         for batch_ind, data_tuple in enumerate(test_dataloader):
             noise_patch, noise_inv, noise_disp = data_tuple
+            # print(noise_patch.shape, noise_inv.shape, noise_disp.shape)
             noise_patch = noise_patch.float().cuda()
             noise_inv = noise_inv.float().cuda()
             noise_patch = noise_patch.transpose(2, 1).contiguous()
+            # print(noise_patch.shape, noise_inv.shape, noise_disp.shape)
             predict = pointfilter_eval(noise_patch)
             predict = predict.unsqueeze(2)
             predict = torch.bmm(noise_inv, predict)
@@ -89,21 +96,36 @@ class PC_denoiser:
         
 # Example usage
 # arr = np.load("data/Tetrahedron.npy")
-input_file = "data/Tetrahedron.npy"
+input_file = "PointFilter/Dataset/Test/boxunion2_100K_0.005.npy"
 output_file = 'denoised_point_cloud.pcd'
 
 arr = np.load(input_file)
-# print(type(arr))
+print(arr.shape)
 arr = PC_denoiser.denoise_pointfilter(arr, output_file=output_file)
+print(arr.shape)
 # arr = IO.pcl_to_numpy(cloud=arr)
 
-import matplotlib.pyplot as plt
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.scatter(arr[:, 0], arr[:, 1], arr[:, 2])
+# import matplotlib.pyplot as plt
+# fig = plt.figure()
+# ax = fig.add_subplot(111, projection='3d')
+# ax.scatter(arr[:, 0], arr[:, 1], arr[:, 2])
 
-ax.set_xlabel('X Label')
-ax.set_ylabel('Y Label')
-ax.set_zlabel('Z Label')
+# ax.set_xlabel('X Label')
+# ax.set_ylabel('Y Label')
+# ax.set_zlabel('Z Label')
 
-plt.show()
+# plt.show()
+
+import open3d as o3d
+import numpy as np
+
+# Create a sample point cloud
+point_cloud = o3d.geometry.PointCloud()
+point_cloud.points = o3d.utility.Vector3dVector(arr)
+
+# Optionally, you can set colors for the points
+colors = np.random.rand(100, 3)  # Random colors for each point
+point_cloud.colors = o3d.utility.Vector3dVector(colors)
+
+# Visualize the point cloud
+o3d.visualization.draw_geometries([point_cloud])
