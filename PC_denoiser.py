@@ -18,9 +18,9 @@ from score_denoise.models.denoise import *
 file_dir = os.path.dirname(os.path.abspath(__file__)) 
 
 class PC_denoiser:
-    @staticmethod
-    def denoise_mls(cloud, search_radius=0.05, compute_normals=True, num_threads=8, output_file=None):
-        pcl_cloud = pcl.PointCloud.PointXYZ(cloud)
+    @classmethod
+    def denoise_mls(cls, cloud, search_radius=0.05, compute_normals=True, num_threads=8, output_file=None):
+        pcl_cloud = IO.get_pcl_from(cloud)
         filtered_cloud = pcl_cloud.moving_least_squares(search_radius=search_radius, compute_normals=compute_normals, num_threads=num_threads)
 
         filtered_points = IO.pcl_to_numpy(filtered_cloud)
@@ -30,10 +30,9 @@ class PC_denoiser:
         
         return filtered_points
 
-
-    @staticmethod
-    def denoise_voxel_grid(cloud, leaf_size = 0.1, output_file=None):
-        pcl_cloud = pcl.PointCloud.PointXYZ(cloud)
+    @classmethod
+    def denoise_voxel_grid(cls, cloud, leaf_size = 0.1, output_file=None):
+        pcl_cloud = IO.get_pcl_from(cloud)
 
         # Create the voxel grid filter
         voxel_grid_filter = pcl.filters.VoxelGrid.PointXYZ()
@@ -54,8 +53,10 @@ class PC_denoiser:
         
         return filtered_points
 
-    @staticmethod
-    def denoise_pointfilter(cloud, patch_radius = 0.05, num_workers = 0, model_path = None, output_file = None):
+    @classmethod
+    def denoise_pointfilter(cls, input, patch_radius = 0.05, num_workers = 0, model_path = None, output_file = None):
+        cloud = IO.get_arr_from(input)
+
         test_dataset = PointcloudPatchDataset(
             cloud=cloud,
             patch_radius=patch_radius,
@@ -95,8 +96,8 @@ class PC_denoiser:
         
         return pred_pts
     
-    @staticmethod
-    def denoise_score_based(cloud, cluster_size=30000, model_path = None, output_file=None):
+    @classmethod
+    def denoise_score_based(cls, input, cluster_size=30000, model_path = None, output_file=None):
         if model_path is None:
             model_path = os.path.join(file_dir, "score_denoise\pretrained\ckpt.pt")
         device = "cuda"
@@ -105,6 +106,7 @@ class PC_denoiser:
         model = DenoiseNet(ckpt['args']).to(device)
         model.load_state_dict(ckpt['state_dict'])
 
+        cloud = IO.get_arr_from(input)
         cloud = torch.FloatTensor(cloud)
 
         if cloud.size(0) <= 50000:
@@ -126,15 +128,3 @@ class PC_denoiser:
             np.save(output_file, pcl_denoised.astype('float32'))
         
         return pcl_denoised
-        
-# Example usage
-# arr = np.load("data/Tetrahedron.npy")
-input_file = "PointFilter/Dataset/Test/boxunion2_100K_0.005.npy"
-output_file = 'denoised_point_cloud.pcd'
-
-arr = np.load(input_file)
-print(arr.shape)
-arr = PC_denoiser.denoise_mls(arr, output_file=output_file)
-print(arr.shape)
-
-IO.visualize_arr(arr)

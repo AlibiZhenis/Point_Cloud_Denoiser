@@ -5,27 +5,37 @@ import open3d as o3d
 
 
 class IO:
-    @staticmethod
-    def get_pcl_from(input):
+    @classmethod
+    def get_pcl_from(cls, input):
         if type(input) == str:
             if input[-4:] == ".npy":
                 arr = np.load(input)
+                cloud = pcl.PointCloud.PointXYZ(arr.astype(np.float32))
+            elif input[-4:] == ".ply":
                 cloud = pcl.PointCloud.PointXYZ()
-                cloud.from_array(arr.astype(np.float32))
-            elif input[-4:] in [".pcd", ".ply"]:
-                cloud = pcl.load(input)
+                pcl.io.loadPLYFile(input, cloud)
+            elif input[-4:] == ".pcd":
+                cloud = pcl.PointCloud.PointXYZ()
+                pcl.io.loadPCDFile(input, cloud)
             else:
                 raise NotImplementedError(input)
             return cloud
         elif type(input) == np.ndarray:
-            cloud = pcl.PointCloud.PointXYZ()
-            cloud.from_array(input.astype(np.float32))
+            cloud = pcl.PointCloud.PointXYZ(input.astype(np.float32))
             return cloud
         else:
             raise NotImplementedError(input)
     
-    @staticmethod
-    def pcl_to_numpy(cloud) -> np.array:
+    @classmethod
+    def get_arr_from(cls, input) -> np.ndarray:
+        if (type(input) == str) and input[-4:] == ".npy":
+            return np.load(input)
+        elif (type(input) == np.ndarray):
+            return input
+        return cls.pcl_to_numpy(cls.get_pcl_from(input))
+    
+    @classmethod
+    def pcl_to_numpy(cls, cloud) -> np.array:
         # Convert to NumPy array
         points = np.zeros((cloud.size(), 3), dtype=np.float32)
         for i in range(cloud.size()):
@@ -35,8 +45,8 @@ class IO:
 
         return points
     
-    @staticmethod
-    def visualize_arr(cloud: np.ndarray) -> None:
+    @classmethod
+    def visualize_arr(cls, cloud: np.ndarray) -> None:
         # Create a sample point cloud
         point_cloud = o3d.geometry.PointCloud()
         point_cloud.points = o3d.utility.Vector3dVector(cloud)
@@ -48,8 +58,8 @@ class IO:
         # Visualize the point cloud
         o3d.visualization.draw_geometries([point_cloud])
 
-    @staticmethod
-    def visualize_pcl(cloud) -> None:
+    @classmethod
+    def visualize_pcl(cls, cloud) -> None:
         # Create a sample point cloud
         arr = IO.pcl_to_numpy(cloud=cloud)
         point_cloud = o3d.geometry.PointCloud()

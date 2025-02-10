@@ -20,3 +20,5 @@ Windows 11
 cuda 11.3
 cudnn 8.2
 python 3.7
+
+python -W ignore:ImportWarning -m unittest discover -s tests
