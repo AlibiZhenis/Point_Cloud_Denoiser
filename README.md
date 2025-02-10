@@ -1,20 +1,26 @@
 # System & Environment
-GPU: NVIDIA RTX A4000
-OS: WIndows 11
-Python 3.7
-CUDA 11.3, cuDNN 8.2
+GPU: NVIDIA RTX A4000  
+OS: WIndows 11  
+Python 3.7  
+CUDA 11.3, cuDNN 8.2  
 
 # Setup
 
-1. Install Visual Studio Build Tools 2019
-2. Create conda environment
-3. Install more dependencies using pip
-4. Install torch_cluster using wheel file
-5. Setup Chamfer distance
+1. Install Visual Studio Build Tools 2019  
+2. Create conda environment  
+```conda env create -f environment.yml```
+3. Install more dependencies using pip  
+```pip install -r requirements.txt```
+4. Install torch_cluster using wheel file  
+```pip install torch_cluster-1.6.0+pt112cu113-cp37-cp37m-win_amd64.whl```
+5. Setup Chamfer distance (for evaluation)  
+```python Point_Cloud_Denoiser/Pointfilter/Customer_Module/chamfer_distance/setup.py install```
 
 
 # Run Tests
-git clone https://github.com/AlibiZhenis/Point_Cloud_Denoiser.git
+
+```python -W ignore:ImportWarning -m unittest discover -s tests```  
+
 
 conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch
 conda install scipy plyfile scikit-learn matplotlib pillow=4.0.0 -c conda-forge
@@ -24,9 +30,3 @@ conda install -c fvcore -c iopath -c conda-forge fvcore iopath
 
 pip freeze
 pip install "git+https://github.com/facebookresearch/pytorch3d.git@stable"
-pip install [wheel filename]
-
-
-python Point_Cloud_Denoiser/Pointfilter/Customer_Module/chamfer_distance/setup.py install
-
-python -W ignore:ImportWarning -m unittest discover -s tests
