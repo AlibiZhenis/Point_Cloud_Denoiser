@@ -22,11 +22,13 @@ CUDA 11.3, cuDNN 8.2
 ```python -W ignore:ImportWarning -m unittest discover -s tests```  
 
 
+
+to remove  
+
 conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch
 conda install scipy plyfile scikit-learn matplotlib pillow=4.0.0 -c conda-forge
-conda install -c conda-forge tqdm scipy scikit-learn pyyaml easydict tensorboard pandas
+conda install -c conda-forge tqdm pyyaml easydict tensorboard pandas
 conda install -c conda-forge point_cloud_utils==0.18.0
 conda install -c fvcore -c iopath -c conda-forge fvcore iopath
 
 pip freeze
-pip install "git+https://github.com/facebookresearch/pytorch3d.git@stable"

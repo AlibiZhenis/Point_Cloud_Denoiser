@@ -4,6 +4,8 @@ channels:
   - defaults
   - conda-forge
   - davidcaron
+  - fvcore
+  - iopath
 dependencies:
   - python=3.7
   - pclpy
@@ -11,3 +13,17 @@ dependencies:
   - plyfile
   - scikit-learn
   - chardet
+  - pytorch==1.12.1
+  - torchvision==0.13.1
+  - torchaudio==0.12.1
+  - cudatoolkit=11.3
+  - matplotlib
+  - pillow=4.0.0
+  - tqdm
+  - pyyaml
+  - easydict
+  - tensorboard
+  - pandas
+  - point_cloud_utils==0.18.0
+  - fvcore
+  - iopath
