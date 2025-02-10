@@ -1,5 +1,6 @@
 import numpy as np
-# import pcl
+import pclpy
+from pclpy import pcl
 
 class IO:
     def get_pcl_from(input):
@@ -22,10 +23,10 @@ class IO:
         
     def pcl_to_numpy(cloud) -> np.array:
         # Convert to NumPy array
-        points = np.zeros((cloud.size, 3), dtype=np.float32)
-        for i in range(cloud.size):
-            points[i, 0] = cloud[i][0]  # X coordinate
-            points[i, 1] = cloud[i][1]  # Y coordinate
-            points[i, 2] = cloud[i][2]  # Z coordinate
+        points = np.zeros((cloud.size(), 3), dtype=np.float32)
+        for i in range(cloud.size()):
+            points[i, 0] = cloud.at(i).x  # X coordinate
+            points[i, 1] = cloud.at(i).y  # Y coordinate
+            points[i, 2] = cloud.at(i).z  # Z coordinate
 
         return points

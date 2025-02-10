@@ -1,11 +1,13 @@
 import os
-# import pcl
 import numpy as np
 import torch
 import open3d as o3d
 from tqdm.auto import tqdm
 
-# from IO import IO
+import pclpy
+from pclpy import pcl 
+
+from IO import IO
 from PointFilter.Pointfilter_Network_Architecture import pointfilternet
 from PointFilter.Pointfilter_DataLoader import PointcloudPatchDataset
 
@@ -16,6 +18,29 @@ from score_denoise.models.denoise import *
 file_dir = os.path.dirname(os.path.abspath(__file__)) 
 
 class PC_denoiser:
+    @staticmethod
+    def denoise_voxel_grid(cloud, leaf_size = 0.1, output_file=None):
+        pcl_cloud = pcl.PointCloud.PointXYZ(cloud)
+
+        # Create the voxel grid filter
+        voxel_grid_filter = pcl.filters.VoxelGrid.PointXYZ()
+
+        # Set the leaf size (the size of the voxel)
+        voxel_grid_filter.setLeafSize(leaf_size, leaf_size, leaf_size)
+
+        # Apply the filter
+        filtered_cloud = pcl.PointCloud.PointXYZ()
+        voxel_grid_filter.setInputCloud(pcl_cloud)
+        voxel_grid_filter.filter(filtered_cloud)
+
+        # Convert the filtered point cloud back to a NumPy array if needed
+        filtered_points = IO.pcl_to_numpy(filtered_cloud)
+
+        if output_file:
+            np.save(output_file, filtered_points.astype('float32'))
+        
+        return filtered_points
+
     @staticmethod
     def denoise_pointfilter(cloud, patch_radius = 0.05, num_workers = 0, model_path = None, output_file = None):
         test_dataset = PointcloudPatchDataset(
@@ -96,7 +121,7 @@ output_file = 'denoised_point_cloud.pcd'
 
 arr = np.load(input_file)
 print(arr.shape)
-arr = PC_denoiser.denoise_score_based(arr, output_file=output_file)
+arr = PC_denoiser.denoise_voxel_grid(arr, leaf_size=0.01, output_file=output_file)
 print(arr.shape)
 
 # Create a sample point cloud
