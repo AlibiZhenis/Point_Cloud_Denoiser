@@ -1,8 +1,11 @@
 import numpy as np
 import pclpy
 from pclpy import pcl
+import open3d as o3d
+
 
 class IO:
+    @staticmethod
     def get_pcl_from(input):
         if type(input) == str:
             if input[-4:] == ".npy":
@@ -20,7 +23,8 @@ class IO:
             return cloud
         else:
             raise NotImplementedError(input)
-        
+    
+    @staticmethod
     def pcl_to_numpy(cloud) -> np.array:
         # Convert to NumPy array
         points = np.zeros((cloud.size(), 3), dtype=np.float32)
@@ -30,3 +34,30 @@ class IO:
             points[i, 2] = cloud.at(i).z  # Z coordinate
 
         return points
+    
+    @staticmethod
+    def visualize_arr(cloud: np.ndarray) -> None:
+        # Create a sample point cloud
+        point_cloud = o3d.geometry.PointCloud()
+        point_cloud.points = o3d.utility.Vector3dVector(cloud)
+
+        # Optionally, you can set colors for the points
+        colors = np.random.rand(100, 3)  # Random colors for each point
+        point_cloud.colors = o3d.utility.Vector3dVector(colors)
+
+        # Visualize the point cloud
+        o3d.visualization.draw_geometries([point_cloud])
+
+    @staticmethod
+    def visualize_pcl(cloud) -> None:
+        # Create a sample point cloud
+        arr = IO.pcl_to_numpy(cloud=cloud)
+        point_cloud = o3d.geometry.PointCloud()
+        point_cloud.points = o3d.utility.Vector3dVector(arr)
+
+        # Optionally, you can set colors for the points
+        colors = np.random.rand(100, 3)  # Random colors for each point
+        point_cloud.colors = o3d.utility.Vector3dVector(colors)
+
+        # Visualize the point cloud
+        o3d.visualization.draw_geometries([point_cloud])

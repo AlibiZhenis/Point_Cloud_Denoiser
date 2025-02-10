@@ -19,6 +19,19 @@ file_dir = os.path.dirname(os.path.abspath(__file__))
 
 class PC_denoiser:
     @staticmethod
+    def denoise_mls(cloud, search_radius=0.05, compute_normals=True, num_threads=8, output_file=None):
+        pcl_cloud = pcl.PointCloud.PointXYZ(cloud)
+        filtered_cloud = pcl_cloud.moving_least_squares(search_radius=search_radius, compute_normals=compute_normals, num_threads=num_threads)
+
+        filtered_points = IO.pcl_to_numpy(filtered_cloud)
+
+        if output_file:
+            np.save(output_file, filtered_points.astype('float32'))
+        
+        return filtered_points
+
+
+    @staticmethod
     def denoise_voxel_grid(cloud, leaf_size = 0.1, output_file=None):
         pcl_cloud = pcl.PointCloud.PointXYZ(cloud)
 
@@ -121,16 +134,7 @@ output_file = 'denoised_point_cloud.pcd'
 
 arr = np.load(input_file)
 print(arr.shape)
-arr = PC_denoiser.denoise_voxel_grid(arr, leaf_size=0.01, output_file=output_file)
+arr = PC_denoiser.denoise_mls(arr, output_file=output_file)
 print(arr.shape)
 
-# Create a sample point cloud
-point_cloud = o3d.geometry.PointCloud()
-point_cloud.points = o3d.utility.Vector3dVector(arr)
-
-# Optionally, you can set colors for the points
-colors = np.random.rand(100, 3)  # Random colors for each point
-point_cloud.colors = o3d.utility.Vector3dVector(colors)
-
-# Visualize the point cloud
-o3d.visualization.draw_geometries([point_cloud])
+IO.visualize_arr(arr)
