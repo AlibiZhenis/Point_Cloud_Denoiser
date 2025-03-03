@@ -25,6 +25,10 @@ class IO:
             return cloud
         else:
             raise NotImplementedError(input)
+        
+    @classmethod
+    def save_to_file(cls, input, filename):
+        np.savetxt(filename, input)
     
     @classmethod
     def get_arr_from(cls, input) -> np.ndarray:

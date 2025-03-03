@@ -15,6 +15,8 @@ from score_denoise.utils.misc import *
 from score_denoise.utils.denoise import *
 from score_denoise.models.denoise import *
 
+from pointcleannet.noise_removal.eval_pcpnet import eval_pcpnet
+
 file_dir = os.path.dirname(os.path.abspath(__file__)) 
 
 class PC_denoiser:
@@ -128,3 +130,15 @@ class PC_denoiser:
             np.save(output_file, pcl_denoised.astype('float32'))
         
         return pcl_denoised
+    
+    @classmethod
+    def denoise_pointcleannet(cls, input, output_file = None, model_path = None, verbose=False):
+        arr = IO.get_arr_from(input)
+        filename = "data\\temp.npy"
+        IO.save_to_file(arr, filename)
+
+        output_cloud = eval_pcpnet(input_filename=filename, batchSize=64, verbose=verbose)
+        if output_file:
+            np.save(output_file, output_cloud.astype('float32'))
+
+        return output_cloud

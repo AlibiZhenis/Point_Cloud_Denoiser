@@ -6,7 +6,7 @@ import torch.nn.parallel
 import torch.utils.data
 import torch.nn.functional as F
 from torch.autograd import Variable
-import utils
+import pointcleannet.noise_removal.utils as utils
 
 
 class STN(nn.Module):

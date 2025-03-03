@@ -7,8 +7,8 @@ import torch
 import torch.nn.parallel
 import torch.utils.data
 from torch.autograd import Variable
-from dataset import PointcloudPatchDataset, SequentialPointcloudPatchSampler, SequentialShapeRandomPointcloudPatchSampler
-from pcpnet import ResPCPNet
+from pointcleannet.noise_removal.dataset import PointcloudPatchDataset, SequentialPointcloudPatchSampler, SequentialShapeRandomPointcloudPatchSampler
+from pointcleannet.noise_removal.pcpnet import ResPCPNet
 from shutil import copyfile
 
 def parse_arguments():
@@ -45,9 +45,15 @@ def init_res_directory(opt):
         copyfile(src, dst)
 
 
-def eval_pcpnet(model_filename = None, param_filename = None, seed = 40938661, batchSize = 0, outdir = "./results", dataset = "testset.txt", sparse_patches = False, cache_capacity = 100, shapename='1', workers = 1, sampling = "full"):
+def eval_pcpnet(input_filename, model_filename = None, param_filename = None, seed = 40938661, batchSize = 0, 
+                sparse_patches = False, verbose = False,
+                cache_capacity = 100, workers = 0, sampling = "full",
+                nrun = 1, patches_per_shape = 1000, n_neighbours=100):
     # get a list of model names
     model_name = "PointCleanNet"
+    root_dir = "Point_Cloud_Denoiser\\pointcleannet\\noise_removal"
+    shapename = input_filename[:-4]
+    output = None
     random.seed(seed)
     torch.manual_seed(seed)
 
@@ -73,7 +79,7 @@ def eval_pcpnet(model_filename = None, param_filename = None, seed = 40938661, b
         else:
             raise ValueError('Unknown output: %s' % (o))
     dataset = PointcloudPatchDataset(
-        root=outdir, shapes_list_file=dataset,
+        root=root_dir, shapes_list_file="",
         patch_radius=trainopt.patch_radius,
         points_per_patch=trainopt.points_per_patch,
         patch_features=['original'],
@@ -82,13 +88,13 @@ def eval_pcpnet(model_filename = None, param_filename = None, seed = 40938661, b
         center=trainopt.patch_center,
         point_tuple=trainopt.point_tuple,
         sparse_patches=sparse_patches,
-        cache_capacity=cache_capacity, shape_names = [opt.shapename.format(i = opt.nrun-1)])
+        cache_capacity=cache_capacity, shape_names = [shapename])
     if sampling == 'full':
         datasampler = SequentialPointcloudPatchSampler(dataset)
     elif sampling == 'sequential_shapes_random_patches':
         datasampler = SequentialShapeRandomPointcloudPatchSampler(
             dataset,
-            patches_per_shape=opt.patches_per_shape,
+            patches_per_shape=patches_per_shape,
             seed=seed,
             sequential_shapes=True,
             identical_epochs=False)
@@ -115,13 +121,13 @@ def eval_pcpnet(model_filename = None, param_filename = None, seed = 40938661, b
     if sampling == 'full':
         shape_patch_count = dataset.shape_patch_count[shape_ind]
     elif sampling == 'sequential_shapes_random_patches':
-        shape_patch_count = min(opt.patches_per_shape, dataset.shape_patch_count[shape_ind])
+        shape_patch_count = min(patches_per_shape, dataset.shape_patch_count[shape_ind])
     else:
         raise ValueError('Unknown sampling strategy: %s' % sampling)
     shape_properties = torch.FloatTensor(shape_patch_count, pred_dim).zero_()
 
     # append model name to output directory and create directory if necessary
-    model_outdir = os.path.join(opt.outdir, model_name)
+    model_outdir = os.path.join(root_dir, model_name)
     if not os.path.exists(model_outdir):
         os.makedirs(model_outdir)
 
@@ -134,7 +140,8 @@ def eval_pcpnet(model_filename = None, param_filename = None, seed = 40938661, b
 
         # get batch, convert to variables and upload to GPU
         points,originals, patch_radiuses,data_trans = data
-        points = Variable(points, volatile=True)
+        with torch.no_grad():
+            points = Variable(points)
         points = points.transpose(2, 1)
         points = points.cuda()
 
@@ -159,7 +166,8 @@ def eval_pcpnet(model_filename = None, param_filename = None, seed = 40938661, b
             o_pred = torch.mul(o_pred, torch.t(patch_radiuses.expand(3, n_points)).float().cuda()) + originals.cuda()
             pred[:, output_pred_ind[oi]:output_pred_ind[oi]+3] = o_pred
 
-        print('[%s %d/%d] shape %s' % (model_name, batchind, num_batch-1, dataset.shape_names[shape_ind]))
+        if verbose:
+            print('[%s %d/%d] shape %s' % (model_name, batchind, num_batch-1, dataset.shape_names[shape_ind]))
 
         batch_offset = 0
         while batch_offset < pred.size(0):
@@ -185,8 +193,9 @@ def eval_pcpnet(model_filename = None, param_filename = None, seed = 40938661, b
                     oi = oi[0]
                     normal_prop = shape_properties[:, output_pred_ind[oi]:output_pred_ind[oi]+3]
                     # Compute mean displacements, inspired from Taubin smoothing
-                    normal_prop = get_meaned_displacements(dataset, normal_prop, opt.n_neighbours)
-                    np.savetxt(os.path.join(opt.outdir,opt.shapename.format(i = opt.nrun) + '.xyz'), normal_prop.numpy())
+                    normal_prop = get_meaned_displacements(dataset, normal_prop, n_neighbours)
+                    output = normal_prop.numpy()
+                    # np.savetxt(os.path.join(root_dir, shapename + '.npy'), normal_prop.numpy())
                     prop_saved[oi] = True
 
                 if not all(prop_saved):
@@ -195,14 +204,16 @@ def eval_pcpnet(model_filename = None, param_filename = None, seed = 40938661, b
                 if shape_ind + 1 < len(dataset.shape_names):
                     shape_patch_offset = 0
                     shape_ind = shape_ind + 1
-                    if opt.sampling == 'full':
+                    if sampling == 'full':
                         shape_patch_count = dataset.shape_patch_count[shape_ind]
-                    elif opt.sampling == 'sequential_shapes_random_patches':
+                    elif sampling == 'sequential_shapes_random_patches':
                         # shape_patch_count = min(opt.patches_per_shape, dataset.shape_patch_count[shape_ind])
                         shape_patch_count = len(datasampler.shape_patch_inds[shape_ind])
                     else:
-                        raise ValueError('Unknown sampling strategy: %s' % opt.sampling)
+                        raise ValueError('Unknown sampling strategy: %s' % sampling)
                     shape_properties = torch.FloatTensor(shape_patch_count, pred_dim).zero_()
+    
+    return output
 
 def get_meaned_displacements(dataset, moved_points, n_neighbours):
     shp = dataset.shape_cache.get(0)
@@ -215,5 +226,5 @@ def get_meaned_displacements(dataset, moved_points, n_neighbours):
 
 if __name__ == '__main__':
     eval_opt = parse_arguments()
-    init_res_directory(eval_opt)
-    eval_pcpnet(eval_opt)
+    # init_res_directory(eval_opt)
+    eval_pcpnet()

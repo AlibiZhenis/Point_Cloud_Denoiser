@@ -44,7 +44,7 @@ class Test_PC_Denoiser(unittest.TestCase):
         self.assertTrue(filtered_cloud.shape[0] != 0)
         self.assertTrue(filtered_cloud.shape[1] != 0)
     
-    def test_pointfilter_with_arr(self):
+    def test_pointfilter_with_file(self):
         filtered_cloud = PC_denoiser.denoise_pointfilter(input_file, output_file=output_file)
         self.assertTrue(filtered_cloud.shape[0] != 0)
         self.assertTrue(filtered_cloud.shape[1] != 0)
@@ -54,7 +54,17 @@ class Test_PC_Denoiser(unittest.TestCase):
         self.assertTrue(filtered_cloud.shape[0] != 0)
         self.assertTrue(filtered_cloud.shape[1] != 0)
     
-    def test_scorebased_with_arr(self):
+    def test_scorebased_with_file(self):
         filtered_cloud = PC_denoiser.denoise_score_based(input_file, output_file=output_file)
+        self.assertTrue(filtered_cloud.shape[0] != 0)
+        self.assertTrue(filtered_cloud.shape[1] != 0)
+
+    def test_pcpnet_with_arr(self):
+        filtered_cloud = PC_denoiser.denoise_pointcleannet(self.cloud, output_file=output_file)
+        self.assertTrue(filtered_cloud.shape[0] != 0)
+        self.assertTrue(filtered_cloud.shape[1] != 0)
+    
+    def test_pcpnet_with_file(self):
+        filtered_cloud = PC_denoiser.denoise_pointcleannet(input_file, output_file=output_file)
         self.assertTrue(filtered_cloud.shape[0] != 0)
         self.assertTrue(filtered_cloud.shape[1] != 0)

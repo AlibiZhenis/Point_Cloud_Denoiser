@@ -9,7 +9,7 @@ import scipy.spatial as spatial
 
 
 def load_shape(point_filename, normals_filename, curv_filename, pidx_filename, clean_points_filename):
-    pts = np.load(point_filename+'.npy')
+    pts = np.loadtxt(point_filename)
 
     if normals_filename != None:
         normals = np.load(normals_filename+'.npy')
@@ -236,12 +236,12 @@ class PointcloudPatchDataset(data.Dataset):
         self.shape_patch_count = []
         self.patch_radius_absolute = []
         for shape_ind, shape_name in enumerate(self.shape_names):
-            print('getting information for shape %s' % (shape_name))
+            # print('getting information for shape %s' % (shape_name))
 
             # load from text file and save in more efficient numpy format
-            point_filename = os.path.join(self.root, shape_name+'.xyz')
-            pts = np.loadtxt(point_filename).astype('float32')
-            np.save(point_filename+'.npy', pts)
+            # point_filename = os.path.join(self.root, shape_name+'.xyz')
+            # pts = np.loadtxt(point_filename).astype('float32')
+            # np.save(point_filename+'.npy', pts)
 
             if self.include_normals:
                 normals_filename = os.path.join(self.root, shape_name+'.normals')
@@ -463,7 +463,7 @@ class PointcloudPatchDataset(data.Dataset):
 
     # load shape from a given shape index
     def load_shape_by_index(self, shape_ind):
-        point_filename = os.path.join(self.root, self.shape_names[shape_ind]+'.xyz')
+        point_filename = self.shape_names[shape_ind]+'.npy'
         normals_filename = os.path.join(self.root, self.shape_names[shape_ind]+'.normals') if self.include_normals else None
         curv_filename = os.path.join(self.root, self.shape_names[shape_ind]+'.curv') if self.include_curvatures else None
         pidx_filename = os.path.join(self.root, self.shape_names[shape_ind]+'.pidx') if self.sparse_patches else None
