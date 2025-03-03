@@ -15,6 +15,8 @@ CUDA 11.3, cuDNN 8.2
 ```pip install torch_cluster-1.6.0+pt112cu113-cp37-cp37m-win_amd64.whl```
 5. Setup Chamfer distance (for evaluation)  
 ```python Point_Cloud_Denoiser/Pointfilter/Customer_Module/chamfer_distance/setup.py install```
+6. Download PointCleanNet pretrained model
+```python pointcleannet/models/download_models.py --task denoising```
 
 
 # Run Tests
