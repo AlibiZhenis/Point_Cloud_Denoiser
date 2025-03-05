@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import torch
-import open3d as o3d
 from tqdm.auto import tqdm
 
 import pclpy
@@ -16,6 +15,8 @@ from score_denoise.utils.denoise import *
 from score_denoise.models.denoise import *
 
 from pointcleannet.noise_removal.eval_pcpnet import eval_pcpnet
+
+from DMRDenoise.denoise import *
 
 file_dir = os.path.dirname(os.path.abspath(__file__)) 
 
@@ -142,3 +143,56 @@ class PC_denoiser:
             np.save(output_file, output_cloud.astype('float32'))
 
         return output_cloud
+    
+    @classmethod
+    def denoise_dmr(cls, input, output_file = None, supervised = True, cluster_size = 30000, patch_size=1000, num_splits=2, expand_knn=16):
+        pc = IO.get_arr_from(input)
+
+        if supervised:
+            ckpt = "DMRDenoise\\pretrained\\supervised\\epoch=153.ckpt"
+        else:
+            ckpt = "DMRDenoise\\pretrained\\unsupervised\\epoch=141.ckpt"
+
+        seed=0
+        device = "cuda"
+        
+        num_points = pc.shape[0]
+        if num_points >= 120000:
+            # print('[INFO] Denoising large point cloud.')
+            denoised, downsampled = run_denoise_large_pointcloud(
+                pc=pc,
+                cluster_size=cluster_size,
+                patch_size=patch_size,
+                ckpt=ckpt,
+                device=device,
+                random_state=seed,
+                expand_knn=expand_knn
+            )
+        elif num_points >= 60000:
+            # print('[INFO] Denoising middle-sized point cloud.')
+            denoised, downsampled = run_denoise_middle_pointcloud(
+                pc=pc,
+                num_splits=num_splits,
+                patch_size=patch_size,
+                ckpt=ckpt,
+                device=device,
+                random_state=seed,
+                expand_knn=expand_knn
+            )
+        elif num_points >= 10000:
+            # print('[INFO] Denoising regular-sized point cloud.')
+            denoised, downsampled = run_denoise(
+                pc=pc,
+                patch_size=patch_size,
+                ckpt=ckpt,
+                device=device,
+                random_state=seed,
+                expand_knn=expand_knn
+            )
+        else:
+            assert False, "DMRDenoise does not support point clouds with less than 10K points."
+
+        if output_file:
+            np.save(output_file, denoised.astype('float32'))
+
+        return denoised

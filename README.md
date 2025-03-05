@@ -18,6 +18,8 @@ CUDA 11.3, cuDNN 8.2
 ```python Point_Cloud_Denoiser/Pointfilter/Customer_Module/chamfer_distance/setup.py install```
 6. Download PointCleanNet pretrained model
 ```python pointcleannet/models/download_models.py --task denoising```
+7. Setup DMR
+```python DMRDenoise/ops/end/setup.py install```
 
 
 # Run Tests
@@ -33,3 +35,5 @@ conda install scipy plyfile scikit-learn matplotlib pillow=4.0.0 -c conda-forge
 conda install -c conda-forge tqdm pyyaml easydict tensorboard pandas
 conda install -c conda-forge point_cloud_utils==0.18.0
 conda install -c fvcore -c iopath -c conda-forge fvcore iopath
+conda install -y -c conda-forge h5py pytorch-lightning
+conda install flask
