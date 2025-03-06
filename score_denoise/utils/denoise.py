@@ -42,7 +42,7 @@ def denoise_large_pointcloud(model, pcl, cluster_size, seed=0):
     device = pcl.device
     pcl = pcl.cpu().numpy()
 
-    print('Running KMeans to construct clusters...')
+    # print('Running KMeans to construct clusters...')
     n_clusters = math.ceil(pcl.shape[0] / cluster_size)
     kmeans = KMeans(n_clusters=n_clusters, random_state=seed).fit(pcl)
 

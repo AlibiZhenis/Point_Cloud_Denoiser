@@ -18,6 +18,8 @@ from pointcleannet.noise_removal.eval_pcpnet import eval_pcpnet
 
 from DMRDenoise.denoise import *
 
+from PointFilter.Customer_Module.chamfer_distance.dist_chamfer import chamferDist
+
 file_dir = os.path.dirname(os.path.abspath(__file__)) 
 
 class PC_denoiser:
@@ -34,7 +36,7 @@ class PC_denoiser:
         return filtered_points
 
     @classmethod
-    def denoise_voxel_grid(cls, cloud, leaf_size = 0.1, output_file=None):
+    def denoise_voxel_grid(cls, cloud, leaf_size = 0.001, output_file=None):
         pcl_cloud = IO.get_pcl_from(cloud)
 
         # Create the voxel grid filter
@@ -196,3 +198,14 @@ class PC_denoiser:
             np.save(output_file, denoised.astype('float32'))
 
         return denoised
+    
+    @classmethod
+    def calculate_chamfer_distance_loss(cls, input1: np.ndarray, input2: np.ndarray):
+        tensor1 = torch.from_numpy(input1.astype("float32")).unsqueeze(0).cuda()
+        tensor2 = torch.from_numpy(input2.astype("float32")).unsqueeze(0).cuda()
+
+        chamfer_dist = chamferDist().to("cuda")
+
+        dist1, dist2 = chamfer_dist(tensor1, tensor2)
+        loss = (torch.mean(dist1)) + (torch.mean(dist2))
+        return loss.item()
