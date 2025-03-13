@@ -1,4 +1,4 @@
-name: fyp_env
+name: PC_denoiser
 channels:
   - pytorch
   - defaults
@@ -7,23 +7,26 @@ channels:
   - fvcore
   - iopath
 dependencies:
-  - python=3.7
-  - pclpy
-  - scipy
-  - plyfile
-  - scikit-learn
-  - chardet
+  - python=3.7.1
+  - pclpy=0.12.0
+  - scipy=1.7.3
+  - plyfile=0.8.1
+  - scikit-learn=1.0.2
+  - chardet=4.0.0
   - pytorch==1.12.1
   - torchvision==0.13.1
   - torchaudio==0.12.1
   - cudatoolkit=11.3
-  - matplotlib
-  - pillow=4.0.0
-  - tqdm
-  - pyyaml
-  - easydict
-  - tensorboard
-  - pandas
-  - point_cloud_utils==0.18.0
-  - fvcore
-  - iopath
+  - matplotlib=3.5.3
+  - pillow=8.2.0
+  - tqdm=4.67.1
+  - pyyaml=6.0
+  - easydict=1.13
+  - tensorboard=1.15.0
+  - pandas=1.2.3
+  - fvcore=0.1.5.post20210915
+  - iopath=0.1.9
+  - requests==2.28.1
+  - h5py
+  - pytorch-lightning
+  - flask
